@@ -25,14 +25,14 @@ V=$HP_V
 ###########################################################
 
 #count,cvg
-awk '{print $3}' $HP_IN | sed "s|$|.cvg.stat|"  | xargs cat | uniq.pl -i 0  > $ODIR/cvg.tab
+awk 'NR > 1 {print $3}' $HP_IN | sed "s|$|.cvg.stat|"  | xargs cat | uniq.pl -i 0  > $ODIR/cvg.tab
 
 #March 7th 2023
 #awk '{print $3}' $HP_IN | sed "s|$|.$S.00.vcf|" | xargs cat | grep -v "^##sample="  |   uniq.pl | bedtools sort -header | eval $HP_FRULE   > $ODIR/$S.00.concat.vcf
 #if [ $V ] ; then awk '{print $3}' $HP_IN | sed "s|$|.$V.00.vcf|" | xargs cat | uniq.pl | bedtools sort -header  | eval $HP_FRULE > $ODIR/$V.00.concat.vcf ; fi
 
 #Sept 22nd 2023; removed " | eval $HP_FRULE"
-awk '{print $3}' $HP_IN | sed "s|$|.$S.00.vcf|" | xargs cat | grep -v "^##sample="  |   uniq.pl | bedtools sort -header   > $ODIR/$S.00.concat.vcf
+awk 'NR > 1 {print $3}' $HP_IN | sed "s|$|.$S.00.vcf|" | xargs cat | grep -v "^##sample="  |   uniq.pl | bedtools sort -header   > $ODIR/$S.00.concat.vcf
 if [ $V ] ; then awk '{print $3}' $HP_IN | sed "s|$|.$V.00.vcf|" | xargs cat | uniq.pl | bedtools sort -header  > $ODIR/$V.00.concat.vcf ; fi
 
 snpSort.sh $ODIR/$S.00.concat
@@ -40,21 +40,21 @@ cat $ODIR/$S.00.concat.vcf | grep -v "^#" | sed 's|:|\t|g'  | count.pl -i -1 -ro
 
 #haplogroups
 if [ "$HP_O" == "Human" ] ; then
-  awk '{print $3}' $HP_IN | sed "s|$|.$S.haplogroup|" | xargs cat | grep -v SampleID | sed 's|"||g' | awk '{print $1,$2}' | sort -u | \
+  awk 'NR > 1 {print $3}' $HP_IN | sed "s|$|.$S.haplogroup|" | xargs cat | grep -v SampleID | sed 's|"||g' | awk '{print $1,$2}' | sort -u | \
     perl -ane 'BEGIN {print "Run\thaplogroup\n"} print "$F[0]\t$F[1]\n";' | sed "s|\.MT||" | \
     tee $ODIR/$S.haplogroup.tab | \
     perl -ane 'print "$1\n" if(/(^Run.+)/ or /(\S+\s+L\d)(.*)/ or /(\S+\s+HV)(.*)/ or /(\S+\s+JT)(.*)/ or /(\S+\s+\w)(.*)/);' > $ODIR/$S.haplogroup1.tab
 
   #haplocheck
-  awk '{print $3}' $HP_IN | sed "s|$|.$S.haplocheck|" | xargs cat  | uniq.pl | sed 's|^"Sample"|"Run"|' | sed 's|"||g' | sed 's| ||g' > $ODIR/$S.haplocheck.tab
+  awk 'NR > 1 {print $3}' $HP_IN | sed "s|$|.$S.haplocheck|" | xargs cat  | uniq.pl | sed 's|^"Sample"|"Run"|' | sed 's|"||g' | sed 's| ||g' > $ODIR/$S.haplocheck.tab
 fi
 
 #fasta
-awk '{print $3}' $HP_IN | sed "s|$|.$S.fa|"        | xargs cat > $ODIR/$S.fa
+awk 'NR > 1 {print $3}' $HP_IN | sed "s|$|.$S.fa|"        | xargs cat > $ODIR/$S.fa
 samtools faidx  $ODIR/$S.fa
 
 #cvg
-awk '{print $3}' $HP_IN | sed "s|$|.$S.merge.bed|" | xargs cat > $ODIR/$S.merge.bed
+awk 'NR > 1 {print $3}' $HP_IN | sed "s|$|.$S.merge.bed|" | xargs cat > $ODIR/$S.merge.bed
 
 #snv counts
 snpCount.sh $S $HP_T1
@@ -71,7 +71,7 @@ if [ $HP_I -lt 2 ] ; then exit 0 ; fi
 if [ $S == "mutserve" ] ; then exit 0 ; fi
 
 SS=$S.$S
-awk '{print $3}' $HP_IN | sed "s|$|.$S.cvg.stat|" | xargs cat | uniq.pl -i 0  > $ODIR/$S.cvg.tab
+awk 'NR > 1 {print $3}' $HP_IN | sed "s|$|.$S.cvg.stat|" | xargs cat | uniq.pl -i 0  > $ODIR/$S.cvg.tab
 
 #Sept 22nd 2023 ; removed "| eval $HP_FRULE " 
 #awk '{print $3}' $HP_IN | sed "s|$|.$SS.00.vcf|"  | xargs cat |  grep -v "^##sample=" |   grep -v "^##bcftools_annotateCommand" | uniq.pl | bedtools sort -header  | eval $HP_FRULE  > $ODIR/$SS.00.concat.vcf  
